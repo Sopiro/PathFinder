@@ -4,6 +4,7 @@ project done at 20170524
 eclipse project 
 
 ---
+'java -jar path.jar' to run on terminal
 
 can play with mouse, keyboard  
  * s           : set start point  
