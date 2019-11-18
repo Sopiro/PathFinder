@@ -2,6 +2,7 @@
 
 project done at 20170524  
 eclipse project 
+written in pure java  
 
 ---
 'java -jar path.jar' to run on terminal
