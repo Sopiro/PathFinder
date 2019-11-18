@@ -1,7 +1,7 @@
 # A* Path Finder
 
 project done at 20170524  
-eclipse project 
+eclipse project  
 written in pure java  
 
 ---
