@@ -80,7 +80,7 @@ public class PathFinder
 
 		if (start == null || end == null)
 		{
-			System.err.println("Error : Start or End point does not exiest");
+			System.err.println("Error : Start or End point does not exist");
 			return;
 		}
 
