@@ -18,7 +18,7 @@ public class Main extends Canvas implements Runnable
 
     public static final int WIDTH = 160;
     public static final int HEIGHT = WIDTH * 9 / 16;
-    public static final int SCALE = 8;
+    public static final int SCALE = 5;
     public static final String TITLE = "A* Path Finding";
 
     public boolean run = false;
