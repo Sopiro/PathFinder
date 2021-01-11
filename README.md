@@ -2,11 +2,12 @@
 
 Micro implementation of __A* path finding__ algorithm written in vanilla java  
 
+[youtube video](https://youtu.be/Dg4O-xP2DVE)  
+
 Project done at 20170524  
-Eclipse project    
+Eclipse project  
 
 ## Preview
-
 ![preview](.github/preview.gif)
 
 ## Features
