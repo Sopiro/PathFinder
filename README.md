@@ -1,11 +1,10 @@
 # A* Path Finder
 
-Micro implementation of __A* path finding__ algorithm written in vanilla java  
+A micro implementation of __A* path finding__ algorithm written in vanilla java  
 
 [youtube video](https://youtu.be/Dg4O-xP2DVE)  
 
-Project done at 20170524  
-Eclipse project  
+Project done at 20170524 in Eclipse  
 
 ## Preview
 ![preview](.github/preview.gif)
