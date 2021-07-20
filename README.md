@@ -2,7 +2,7 @@
 
 A micro implementation of [A* path finding](https://en.wikipedia.org/wiki/A*_search_algorithm) algorithm written in vanilla java  
 
-youtube video: https://youtu.be/Dg4O-xP2DVE  
+Video: https://youtu.be/Dg4O-xP2DVE  
 
 Project done at 20170524 in Eclipse  
 
