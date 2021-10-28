@@ -10,8 +10,8 @@ Project done at 20170524 in Eclipse
 ![preview](.github/preview.gif)
 
 ## Features
-
-Line drawing algorithm is used to draw continuous wall 
+- A* path finding in grid world
+- Line drawing algorithm is used to draw contiguous wall 
 
 ## Play
 ```shell script
