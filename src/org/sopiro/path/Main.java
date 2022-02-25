@@ -21,7 +21,7 @@ public class Main extends Canvas implements Runnable
     public static final int SCALE = 5;
     public static final String TITLE = "A* Path Finding";
 
-    public boolean run = false;
+    public boolean isRunning = false;
 
     public BufferedImage image;
     public int[] pixels;
@@ -54,17 +54,16 @@ public class Main extends Canvas implements Runnable
 
     public void start()
     {
-        if (run)
-            return;
+        if (isRunning)  return;
 
-        run = true;
+        isRunning = true;
 
         new Thread(this).start();
     }
 
     public void run()
     {
-        final double frameCut = 1000000000.0 / 60.0;
+        final double frameTime = 1000000000.0 / 60.0;
         long lastTime = System.nanoTime();
         long unprocessedTime = 0;
 
@@ -73,16 +72,16 @@ public class Main extends Canvas implements Runnable
         int frames = 0;
         int updates = 0;
 
-        while (run)
+        while (isRunning)
         {
             long currentTime = System.nanoTime();
             long passedTime = currentTime - lastTime;
             unprocessedTime += passedTime;
             lastTime = currentTime;
 
-            if (unprocessedTime >= frameCut)
+            if (unprocessedTime >= frameTime)
             {
-                unprocessedTime -= frameCut;
+                unprocessedTime -= frameTime;
                 update();
                 updates++;
             }
@@ -117,12 +116,7 @@ public class Main extends Canvas implements Runnable
         }
 
         for (int i = 0; i < pixels.length; i++)
-            pixels[i] = 0;
-
-        for (int i = 0; i < pixels.length; i++)
         {
-            pixels[i] = 0x808080;
-
             switch (pathFinder.getType(i))
             {
                 case Node.Air:
@@ -156,6 +150,7 @@ public class Main extends Canvas implements Runnable
     {
         JFrame f = new JFrame(TITLE);
         f.setResizable(false);
+
         Main m = new Main();
         f.add(m);
         f.pack();
