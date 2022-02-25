@@ -1,22 +1,21 @@
 # A* Path Finder
 
-Micro implementation of __A* path finding__ algorithm written in vanilla java  
+A micro implementation of [A* path finding](https://en.wikipedia.org/wiki/A*_search_algorithm) algorithm written in vanilla java  
 
-[youtube video](https://youtu.be/Dg4O-xP2DVE)  
+Video: https://youtu.be/Dg4O-xP2DVE  
 
-Project done at 20170524  
-Eclipse project  
+Project done at 20170524 in Eclipse  
 
 ## Preview
 ![preview](.github/preview.gif)
 
 ## Features
-
-Line drawing algorithm is used to draw continuous wall 
+- A* path finding in grid world
+- Line drawing algorithm is used to draw contiguous wall 
 
 ## Play
 ```shell script
-java -jar .path.jar
+java -jar path.jar
 ```
 
 You can play with mouse, keyboard  
