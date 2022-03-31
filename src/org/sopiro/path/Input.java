@@ -1,52 +1,47 @@
 package org.sopiro.path;
 
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.awt.event.*;
 import java.util.Arrays;
 
 public class Input implements KeyListener, MouseListener, FocusListener
 {
-    public boolean keys[];
-    private boolean pkeys[];
-    public boolean mouses[];
-    private boolean pmouses[];
+    public boolean[] keys;
+    private boolean[] _keys;
+    public boolean[] mouses;
+    private boolean[] _mouses;
 
     public Input()
     {
         keys = new boolean[65535];
-        pkeys = new boolean[65535];
+        _keys = new boolean[65535];
         mouses = new boolean[65535];
-        pmouses = new boolean[65535];
+        _mouses = new boolean[65535];
     }
 
     public void update()
     {
-        pkeys = Arrays.copyOf(keys, keys.length);
-        pmouses = Arrays.copyOf(mouses, mouses.length);
+        _keys = Arrays.copyOf(keys, keys.length);
+        _mouses = Arrays.copyOf(mouses, mouses.length);
     }
 
-    public boolean whenKeyPressed(int key)
+    public boolean isKeyDown(int key)
     {
         return keys[key];
     }
 
-    public boolean whenButtonPressed(int button)
+    public boolean isButtonDown(int button)
     {
-        return pmouses[button];
+        return _mouses[button];
     }
 
-    public boolean whenKeyOncePressed(int key)
+    public boolean isKeyPressed(int key)
     {
-        return !pkeys[key] && keys[key];
+        return !_keys[key] && keys[key];
     }
 
-    public boolean whenButtonOncePressed(int button)
+    public boolean isButtonPressed(int button)
     {
-        return !pmouses[button] && mouses[button];
+        return !_mouses[button] && mouses[button];
     }
 
     public void mouseClicked(MouseEvent e)

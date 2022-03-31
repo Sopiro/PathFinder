@@ -1,25 +1,40 @@
 package org.sopiro.path;
 
-import java.awt.Point;
+import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.*;
 
-/**
- * @author Sopiro
- */
+import static org.sopiro.path.Heuristics.*;
+
+enum Heuristics
+{
+    TEN,
+    FOURTEEN,
+    SQUARE_ROOT
+}
+
 public class PathFinder
 {
-    public int width, height;
-    public Input input;
-    public Node[] nodes;
+    private static final double SQRT2 = Math.sqrt(2.0);
 
-    public ArrayList<Node> open;
-    public ArrayList<Node> close;
-    public ArrayList<Node> res;
+    private int width;
+    private int height;
 
-    public int cx, cy, px, py;
+    private Input input;
+    private Node[] nodes;
+
+    private PriorityQueue<Node> open;
+    private Set<Node> close;
+    private ArrayList<Node> result;
+
+    private Point current;
+    private Point previous;
+
+    private Node start;
+    private Node end;
+
+    private long lastTime = 0;
 
     public PathFinder(int width, int height, Input input)
     {
@@ -32,51 +47,54 @@ public class PathFinder
         for (int i = 0; i < width * height; i++)
             nodes[i] = new Node(i % width, i / width);
 
-        open = new ArrayList<Node>();
-        close = new ArrayList<Node>();
-        res = new ArrayList<Node>();
+        open = new PriorityQueue<Node>(nodes.length, (Node a, Node b) -> (a.f - b.f) < 0 ? -1 : 1);
+        close = new HashSet(nodes.length);
+        result = new ArrayList(nodes.length);
+
+        current = new Point(0, 0);
+        previous = new Point(0, 0);
     }
 
-    public void update(Point p)
+    public void update(final Point mousePosition)
     {
-        drawBlock(p);
+        if (mousePosition != null)
+        {
+            previous.x = current.x;
+            previous.y = current.y;
+            current.x = mousePosition.x / Main.SCALE;
+            current.y = mousePosition.y / Main.SCALE;
 
-        if (input.whenButtonOncePressed(MouseEvent.BUTTON3 + 1) || input.whenKeyOncePressed(KeyEvent.VK_S))
-            setType(cx, cy, Node.Start);
+            if (input.isButtonDown(MouseEvent.BUTTON1))
+            {
+                drawLine(NodeType.Wall);
+            } else if (input.isButtonDown(MouseEvent.BUTTON3))
+            {
+                drawLine(NodeType.Air);
+            }
+        }
 
-        if (input.whenButtonOncePressed(MouseEvent.BUTTON3 + 2) || input.whenKeyOncePressed(KeyEvent.VK_E))
-            setType(cx, cy, Node.End);
+        if (input.isButtonPressed(MouseEvent.BUTTON3 + 1) || input.isKeyPressed(KeyEvent.VK_S))
+        {
+            setType(current.x, current.y, NodeType.Start);
+            this.start = nodes[current.x + current.y * this.width];
+        }
 
-        if (input.whenKeyOncePressed(KeyEvent.VK_C))
-            clear();
+        if (input.isButtonPressed(MouseEvent.BUTTON3 + 2) || input.isKeyPressed(KeyEvent.VK_E))
+        {
+            setType(current.x, current.y, NodeType.End);
+            this.end = nodes[current.x + current.y * this.width];
+        }
 
-        if (input.whenKeyOncePressed(KeyEvent.VK_R))
-            reset();
-
-        if (input.whenKeyOncePressed(KeyEvent.VK_SPACE))
-            execute(2);
-
-        if (input.whenKeyOncePressed(KeyEvent.VK_1))
-            execute(0);
-
-        if (input.whenKeyOncePressed(KeyEvent.VK_2))
-            execute(1);
+        if (input.isKeyPressed(KeyEvent.VK_SPACE)) execute(SQUARE_ROOT);
+        if (input.isKeyPressed(KeyEvent.VK_1)) execute(TEN);
+        if (input.isKeyPressed(KeyEvent.VK_2)) execute(FOURTEEN);
+        if (input.isKeyPressed(KeyEvent.VK_C)) clear();
+        if (input.isKeyPressed(KeyEvent.VK_R)) reset();
     }
 
-    public void execute(int method)
+    private void execute(Heuristics method)
     {
         reset();
-
-        Node start = null;
-        Node end = null;
-
-        for (int i = 0; i < nodes.length; i++)
-        {
-            if (getType(i) == Node.Start)
-                start = nodes[i];
-            else if (getType(i) == Node.End)
-                end = nodes[i];
-        }
 
         if (start == null || end == null)
         {
@@ -84,9 +102,10 @@ public class PathFinder
             return;
         }
 
+        // Set up heuristic value
         switch (method)
         {
-            case 0:
+            case FOURTEEN:
             {
                 for (int i = 0; i < nodes.length; i++)
                 {
@@ -102,7 +121,7 @@ public class PathFinder
                 }
                 break;
             }
-            case 1:
+            case TEN:
             {
                 for (int i = 0; i < nodes.length; i++)
                 {
@@ -114,7 +133,7 @@ public class PathFinder
                 }
                 break;
             }
-            case 2:
+            case SQUARE_ROOT:
             {
                 for (int i = 0; i < nodes.length; i++)
                 {
@@ -124,47 +143,31 @@ public class PathFinder
                     nodes[i].h = Math.sqrt(dx * dx + dy * dy);
                     nodes[i].f = nodes[i].h;
                 }
+                break;
             }
-            break;
         }
 
         open.add(start);
 
-        boolean done = false;
         boolean error = false;
 
-        while (!done && !error)
+        while (true)
         {
-            if (open.size() == 0)
+            if (open.isEmpty())
             {
                 error = true;
-                continue;
+                break;
             }
             if (close.contains(end))
             {
-                done = true;
-                continue;
+                break;
             }
 
-            Node it = open.get(0);
-            double lf = it.f;
-            Node current = it;
-
-            for (int i = 1; i < open.size(); i++)
-            {
-                it = open.get(i);
-
-                if (it.f < lf)
-                {
-                    current = it;
-                    lf = it.f;
-                }
-            }
-
-            open.remove(current);
+            Node current = open.poll();
             close.add(current);
 
-            // System.out.println("current : " + current);
+            if (current.type == NodeType.Air)
+                current.type = NodeType.Explored;
 
             boolean l = false;
             boolean r = false;
@@ -178,16 +181,14 @@ public class PathFinder
 
                 if (x < 0 || y < 0 || x >= width || y >= height) continue;
 
-                if (nodes[x + y * width].type == Node.Block)
+                if (nodes[x + y * width].type == NodeType.Wall)
                 {
                     if (i == 1) u = true;
-                    if (i == 3) l = true;
-                    if (i == 5) r = true;
-                    if (i == 7) d = true;
+                    else if (i == 3) l = true;
+                    else if (i == 5) r = true;
+                    else if (i == 7) d = true;
                 }
             }
-
-            // System.out.println(l + ", " + r + ", " + u + ", " + d);
 
             for (int i = 0; i < 9; i++)
             {
@@ -204,224 +205,162 @@ public class PathFinder
 
                 Node t = nodes[x + y * width];
 
-                if (getType(x, y) == Node.Block || close.contains(t)) continue;
+                if (getType(x, y) == NodeType.Wall || close.contains(t)) continue;
 
-                double g = (i % 2 == 0 ? Math.sqrt(2) : 1);
+                double g = (i % 2 == 0 ? SQRT2 : 1.0);
 
                 if (!open.contains(t))
                 {
                     t.parent = current;
                     t.g = current.g + g;
                     t.f = t.g + t.h;
+
                     open.add(t);
                 } else
                 {
-                    if (current.g + g > t.g)
-                    {
-                        // System.out.println(i + " : " + t + ", parent : " +
-                        // t.parent);
-                        continue;
-                    }
+                    if (current.g + g > t.g) continue;
 
                     t.parent = current;
                     t.g = current.g + g;
                     t.f = t.g + t.h;
                 }
-
-                // System.out.println(i + " : " + t + ", parent : " + t.parent);
             }
-
-            // System.out.println("******************************************************************");
         }
+
+        long passedTime = System.currentTimeMillis() - lastTime;
 
         if (error)
         {
-            System.err.println("Error: No path");
+            System.err.println("Error: No path, " + passedTime + "ms");
         } else
         {
             Node t = end.parent;
 
+            // Back track
             while (t != start)
             {
-                t.type = Node.Road;
-                res.add(t);
+                t.type = NodeType.Road;
+                result.add(t);
                 t = t.parent;
             }
 
-            Collections.reverse(res);
+            Collections.reverse(result);
 
-            System.out.println("Done!: " + res.size() + " blocks far");
+            System.out.println("Done!: " + result.size() + " blocks far, " + passedTime + "ms");
         }
     }
 
-    private void drawBlock(Point p)
+    private void drawLine(NodeType type)
     {
-        if (p == null) return;
+        final double gradient = Math.abs((current.y - previous.y) / (double) (current.x - previous.x));
 
-        px = cx;
-        py = cy;
-        cx = p.x / Main.SCALE;
-        cy = p.y / Main.SCALE;
+        int sx = previous.x;
+        int ex = current.x;
+        int sy = previous.y;
+        int ey = current.y;
 
-        if (input.whenButtonPressed(MouseEvent.BUTTON1))
+        setType(current.x, current.y, type);
+
+        if (gradient < 1.0)
         {
-            int sx = px;
-            int ex = cx;
-            int sy = py;
-            int ey = cy;
-
-            if (px > cx)
+            if (previous.x > current.x)
             {
-                sx = cx;
-                ex = px;
-                sy = cy;
-                ey = py;
+                sx = current.x;
+                ex = previous.x;
+                sy = current.y;
+                ey = previous.y;
             }
 
-            setType(cx, cy, Node.Block);
-
-            int gradient = (int) Math.abs((double) (ey - sy) / (double) (ex - sx));
-
-            if (gradient < 1)
-                for (int x = sx; x < ex; x++)
-                {
-                    int t = (int) ((double) (ey - sy) * ((double) (x - sx)) / ((double) (ex - sx)));
-                    int y = (int) ((sy + t));
-                    setType(x, y, Node.Block);
-                }
-
-            sx = px;
-            ex = cx;
-            sy = py;
-            ey = cy;
-
-            if (py > cy)
+            for (int x = sx; x < ex; x++)
             {
-                sx = cx;
-                ex = px;
-                sy = cy;
-                ey = py;
+                int t = (int) ((double) (ey - sy) * ((double) (x - sx)) / ((double) (ex - sx)));
+                int y = sy + t;
+
+                setType(x, y, type);
             }
-
-            if (gradient >= 1)
-                for (int y = sy; y < ey; y++)
-                {
-                    int t = (int) ((double) (ex - sx) * ((double) (y - sy)) / ((double) (ey - sy)));
-                    int x = (int) ((sx + t));
-                    setType(x, y, Node.Block);
-                }
-        }
-
-        if (input.whenButtonPressed(MouseEvent.BUTTON3))
+        } else
         {
-            int sx = px;
-            int ex = cx;
-            int sy = py;
-            int ey = cy;
-
-            if (px > cx)
+            if (previous.y > current.y)
             {
-                sx = cx;
-                ex = px;
-                sy = cy;
-                ey = py;
+                sx = current.x;
+                ex = previous.x;
+                sy = current.y;
+                ey = previous.y;
             }
 
-            setType(cx, cy, Node.Air);
-
-            int gradient = (int) Math.abs((double) (ey - sy) / (double) (ex - sx));
-
-            if (gradient < 1)
-                for (int x = sx; x < ex; x++)
-                {
-                    int t = (int) ((double) (ey - sy) * ((double) (x - sx)) / ((double) (ex - sx)));
-                    int y = (int) ((sy + t));
-                    setType(x, y, Node.Air);
-                }
-
-            sx = px;
-            ex = cx;
-            sy = py;
-            ey = cy;
-
-            if (py > cy)
+            for (int y = sy; y < ey; y++)
             {
-                sx = cx;
-                ex = px;
-                sy = cy;
-                ey = py;
-            }
+                int t = (int) ((double) (ex - sx) * ((double) (y - sy)) / ((double) (ey - sy)));
+                int x = sx + t;
 
-            if (gradient >= 1)
-                for (int y = sy; y < ey; y++)
-                {
-                    int t = (int) ((double) (ex - sx) * ((double) (y - sy)) / ((double) (ey - sy)));
-                    int x = (int) ((sx + t));
-                    setType(x, y, Node.Air);
-                }
+                setType(x, y, type);
+            }
         }
     }
 
-    public void setType(int x, int y, int type)
+    private void setType(int x, int y, NodeType type)
     {
         if (x < 0 || x >= width || y < 0 || y >= height) return;
 
         switch (type)
         {
-            case Node.Start:
+            case Start:
             {
-                for (int i = 0; i < width * height; i++)
-                    if (nodes[i].type == Node.Start)
-                        setType(i, 0);
+                if (start != null) setType(start.x, start.y, NodeType.Air);
                 break;
             }
-            case Node.End:
+            case End:
             {
-                for (int i = 0; i < width * height; i++)
-                    if (nodes[i].type == Node.End)
-                        setType(i, 0);
+                if (end != null) setType(end.x, end.y, NodeType.Air);
                 break;
             }
         }
+
         nodes[x + y * width].type = type;
     }
 
-    public void setType(int i, int type)
+    private void setType(int i, NodeType type)
     {
         setType(i % width, i / width, type);
     }
 
-    public int getType(int x, int y)
+    public NodeType getType(int x, int y)
     {
         return nodes[x + y * width].type;
     }
 
-    public int getType(int i)
+    public NodeType getType(int i)
     {
         return getType(i % width, i / width);
     }
 
-    public void clear()
+    private void clear()
     {
         for (int i = 0; i < nodes.length; i++)
-            setType(i, Node.Air);
+            setType(i, NodeType.Air);
 
         open.clear();
         close.clear();
-        res.clear();
+        result.clear();
     }
 
-    public void reset()
+    private void reset()
     {
         for (int i = 0; i < nodes.length; i++)
-            if (getType(i) == Node.Road)
-                setType(i, Node.Air);
+        {
+            NodeType type = getType(i);
 
-        for (int i = 0; i < nodes.length; i++)
-            nodes[i].clearData();
+            if (type == NodeType.Road || type == NodeType.Explored)
+                setType(i, NodeType.Air);
+        }
+
+        for (final Node node : nodes)
+            node.clearData();
 
         open.clear();
         close.clear();
-        res.clear();
+        result.clear();
+
+        lastTime = System.currentTimeMillis();
     }
 }

@@ -1,24 +1,18 @@
 package org.sopiro.path;
 
-import java.awt.Canvas;
-import java.awt.Dimension;
-import java.awt.Graphics;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 
-import javax.swing.JFrame;
-
-/**
- * @author Sopiro (https://github.com/Sopiro/)
- */
 public class Main extends Canvas implements Runnable
 {
     private static final long serialVersionUID = 1L;
 
     public static final int WIDTH = 160;
     public static final int HEIGHT = WIDTH * 9 / 16;
-    public static final int SCALE = 5;
+    public static final int SCALE = 8;
     public static final String TITLE = "A* Path Finding";
 
     public boolean isRunning = false;
@@ -54,7 +48,7 @@ public class Main extends Canvas implements Runnable
 
     public void start()
     {
-        if (isRunning)  return;
+        if (isRunning) return;
 
         isRunning = true;
 
@@ -119,24 +113,26 @@ public class Main extends Canvas implements Runnable
         {
             switch (pathFinder.getType(i))
             {
-                case Node.Air:
+                case Air:
                     pixels[i] = 0xc0c0c0;
                     break;
-                case Node.Block:
+                case Wall:
                     pixels[i] = 0x000000;
                     break;
-                case Node.Start:
+                case Start:
                     pixels[i] = 0x0000ff;
                     break;
-                case Node.End:
+                case End:
                     pixels[i] = 0xff0000;
                     break;
-                case Node.Road:
+                case Road:
                     pixels[i] = 0xffff00;
                     break;
-                case Node.Explored:
-                    pixels[i] = 0x505050;
+                case Explored:
+                    pixels[i] = 0xcfcfcf;
                     break;
+                default:
+                    System.exit(1);
             }
         }
 
